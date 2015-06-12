@@ -10,19 +10,48 @@
   "browserify": {
     "transform": [
       "browserify-shim",
+      [
+        "stringify",
+        {
+          "extensions": [
+            ".html"
+          ],
+          "minify": true
+        }
+      ],
       "babelify"
     ]
   },
   "browserify-shim": {
     "three": "global:THREE",
-    "WebVRManager": "global:WebVRManager"
+    "WebVRManager": "global:WebVRManager",
+    "zepto": "global:$",
+    "qrcode": "global:QRCode"
   },
   "author": "Matt Green <mgreen9@gmail.com>",
   "license": "ISC",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "babelify": "^6.1.2",
+    "browser-sync": "^2.7.10",
     "browserify": "^10.2.4",
     "browserify-shim": "^3.8.8",
-    "rtc-quickconnect": "^4.3.1"
+    "bundle-collapser": "^1.2.0",
+    "gulp": "^3.9.0",
+    "gulp-changed": "^1.2.1",
+    "gulp-if": "^1.2.5",
+    "gulp-load-plugins": "^1.0.0-rc.1",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.5",
+    "merge-stream": "^0.1.7",
+    "page": "^1.6.3",
+    "pyrsmk-toast": "^1.2.4",
+    "rtc-quickconnect": "^4.3.1",
+    "stringify": "^3.1.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.2.2"
   }
 }

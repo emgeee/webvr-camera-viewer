@@ -1,24 +1,61 @@
 
-var camera = require('./camera')
-var viewer = require('./viewer')
+let $ = require('zepto')
+let page = require('page')
 
-window.addEventListener('load', () => {
-  let streamBtn = document.getElementById('stream')
-  let viewBtn = document.getElementById('view')
+// script loader
+let toast = require('pyrsmk-toast')
+let threeLoaded = false
 
-  function removeBtns () {
-    document.body.removeChild(streamBtn)
-    document.body.removeChild(viewBtn)
-  }
+let view = require('./viewer.js')
+let viewTpl = require('./templates/view.tpl.html')
 
-  streamBtn.addEventListener('click', () => {
-    removeBtns()
-    camera()
-  })
+let stream = require('./streamer.js')
+let streamTpl = require('./templates/stream.tpl.html')
 
-  viewBtn.addEventListener('click', () => {
-    removeBtns()
-    viewer()
-  })
+let mainTpl = require('./templates/main.tpl.html')
 
+document.addEventListener('DOMContentLoaded', () => {
+  page('/view/:id', loadThree, renderTpl(viewTpl), view)
+
+  page('/stream', stream.create, (ctx) => { page.redirect('/stream/' + ctx.params.id) })
+  page('/stream/:id', renderTpl(streamTpl), stream.join)
+
+  page('/', renderTpl(mainTpl), home)
+  // page('*', () => { console.error('Oops fall through!'); page('/') })
+  page({hashbang: true})
 })
+
+function renderTpl (tpl) {
+  return (ctx, next) => {
+    $('#app').html(tpl)
+    next()
+  }
+}
+
+// Only load three+friends when needed
+function loadThree (ctx, next) {
+  if (!threeLoaded) {
+    threeLoaded = true
+    toast(
+      ['scripts/three.js', () => { return window.THREE }],
+      'scripts/webvr-polyfill.js',
+      'scripts/VRControls.js',
+      'scripts/VREffect.js',
+      'scripts/webvr-manager.js',
+      () => {
+        next()
+      }
+    )
+  } else {
+    next()
+  }
+}
+
+function home () {
+  let streamBtn = document.getElementById('stream')
+
+  streamBtn.addEventListener('click', (e) => {
+    page('/stream')
+    e.preventDefault()
+  })
+}

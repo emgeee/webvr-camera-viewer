@@ -46,9 +46,6 @@ module.exports = function view (ctx) {
         this.mesh.rotation.y += Math.PI / 128
       }
     }
-
-
-
   }
 
   const room = ctx.params.id

@@ -15,6 +15,7 @@ let streamTpl = require('./templates/stream.tpl.html')
 let mainTpl = require('./templates/main.tpl.html')
 
 document.addEventListener('DOMContentLoaded', () => {
+  page.base((window.location.pathname === '/' ? '' : window.location.pathname))
   page('/view/:id', loadThree, renderTpl(viewTpl), view)
 
   page('/stream', stream.create, (ctx) => { page.redirect('/stream/' + ctx.params.id) })

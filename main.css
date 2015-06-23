@@ -1,0 +1,64 @@
+
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
+
+body {
+  padding: 20px;
+  font-family: Open Sans;
+}
+
+h1 {
+
+}
+
+.subtitle {
+  font-size: 16px;
+  font-weight: 300;
+  margin-left: 15px;
+
+}
+
+.video-control {
+  /* border: 1px black solid; */
+
+  display: inline-block;
+  width: 48%;
+  margin: 20px 1%;
+}
+
+#twitter {
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .video-control {
+    /* border: 1px black solid; */
+
+    display: block;
+    width: 100%;
+    margin: 15px 0;
+    padding: 15px 0;
+
+    border-bottom: 1px gray solid;
+  }
+}
+
+.video-control button {
+  width: 80px;
+  height: 25px;
+  /* margin: 10px 10px; */
+  margin-bottom: 5px;
+}
+
+.video-control video {
+  width: 100%;
+}
+
+.streaming-buttons {
+  display: inline-block;
+}
+
+.streaming-indicator {
+  display: inline-block;
+  float: right;
+  overflow: auto;
+}

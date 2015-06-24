@@ -7063,29 +7063,13 @@ exports.join = function stream(ctx) {
   var viewLink = window.location.href.replace("stream", "view");
 
   $("#roomId").text(room);
-  $("#viewLink").text(viewLink);
-  $("#viewLink")[0].href = viewLink;
 
-  // generate a QRCode for easy sharing
-  new QRCode($("#qrcode")[0], { // eslint-disable-line
-    text: window.location.href.replace("stream", "view"),
-    width: 128,
-    height: 128,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  var streamerLink = new LinkShare(window.location.href);
+  var viewerLink = new LinkShare(viewLink);
 
-  window.twttr.ready(function () {
-    window.twttr.widgets.createShareButton(viewLink, document.getElementById("twitter"), {
-      text: "Live on #WebVR:",
-      hashtags: "cardboard",
-      size: "large",
-      count: "none"
-    });
-  });
+  streamerLink.appendTo($("#stream-box"));
+  viewerLink.appendTo($("#view-box"));
 
-  //
   if (navigator.getUserMedia) {
     (function () {
       var usersConnected = 0;
@@ -7114,19 +7098,53 @@ exports.join = function stream(ctx) {
   }
 };
 
-var LinkShare = function LinkShare(link) {
-  _classCallCheck(this, LinkShare);
+var LinkShare = (function () {
+  function LinkShare(link) {
+    _classCallCheck(this, LinkShare);
 
-  this.element = $("<div class=\"link-share\"></div>");
-  this.qrcode = $("<div></div>");
-  this.link = $("<a></a>", { href: link })
-  // this.tweetButton =
-  ;
-};
+    this.link = link;
+    this.element = $("<div></div>");
+    this.qrcode = $("<div></div>");
+    this.twitter = $("<div></div>");
+    this.linkElement = $("<a>" + link + "</a>", { href: link });
+
+    this.element.append(this.qrcode).append(this.linkElement).append(this.twitter);
+  }
+
+  _createClass(LinkShare, [{
+    key: "appendTo",
+    value: function appendTo(elem) {
+      var _this = this;
+
+      this.element.appendTo(elem);
+
+      // generate a QRCode for easy sharing
+      new QRCode(this.qrcode[0], { // eslint-disable-line
+        text: this.link,
+        width: 512,
+        height: 512,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      window.twttr.ready(function () {
+        window.twttr.widgets.createShareButton(_this.link, _this.twitter[0], {
+          text: "Live on #WebVR:",
+          hashtags: "cardboard",
+          size: "large",
+          count: "none"
+        });
+      });
+    }
+  }]);
+
+  return LinkShare;
+})();
 
 var VideoControlPanel = (function () {
   function VideoControlPanel(device, rtcStream) {
-    var _this = this;
+    var _this2 = this;
 
     _classCallCheck(this, VideoControlPanel);
 
@@ -7142,11 +7160,11 @@ var VideoControlPanel = (function () {
     this.video[0].autoplay = true;
 
     this.startButton.on("click", function (e) {
-      _this.startFeed();
+      _this2.startFeed();
     });
 
     this.stopButton.on("click", function (e) {
-      _this.stopFeed();
+      _this2.stopFeed();
     });
 
     this.element.append($("<div class=\"streaming-buttons\"></div>").append(this.startButton).append(this.stopButton)).append(this.streamingStatusIndicator).append(this.video);
@@ -7157,7 +7175,7 @@ var VideoControlPanel = (function () {
 
     // Start streaming a camera feed over WebRTC
     value: function startFeed() {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!this.stream) {
         var options = undefined;
@@ -7174,13 +7192,13 @@ var VideoControlPanel = (function () {
         }
 
         openVideoStream(options).then(function (stream) {
-          _this2.stream = stream;
-          _this2.video[0].src = window.URL.createObjectURL(stream);
+          _this3.stream = stream;
+          _this3.video[0].src = window.URL.createObjectURL(stream);
 
           // add stream to the rtc Stream
-          _this2.rtcStream.addStream(stream);
-          _this2.streamingStatusIndicator.text("streaming!");
-          _this2.streamingStatusIndicator.css("color", "green");
+          _this3.rtcStream.addStream(stream);
+          _this3.streamingStatusIndicator.text("streaming!");
+          _this3.streamingStatusIndicator.css("color", "green");
         });
       } else {
         this.rtcStream.addStream(this.stream);
@@ -7208,7 +7226,7 @@ var VideoControlPanel = (function () {
 module.exports = "<h1>WebVR Camera Stream</h1><a href=# id=stream>stream</a>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/templates/stream.tpl.html":[function(require,module,exports){
-module.exports = "<h1>Room: <span id=roomId></span> <span class=subtitle>USERS CONNECTED: <span id=user-count></span></span></h1><div><p>Scan this code with your phone to open up the WebVR viewer.<div id=qrcode></div></p></div><div><p>You can also share your live stream with this link: <a id=viewLink></a> or viatwitter</p></div>";
+module.exports = "<h1>Room: <span id=roomId></span> <span class=subtitle>USERS CONNECTED: <span id=user-count></span></span></h1><div id=stream-box class=link-share><h2>Stream Link</h2></div><div id=view-box class=link-share><h2>View Link</h2></div>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/templates/view.tpl.html":[function(require,module,exports){
 module.exports = "<style>#viewer {\n  background-color: #000;\n  color: #fff;\n  margin: 0px;\n  padding: 0;\n  overflow: hidden;\n}</style><div id=viewer></div>";

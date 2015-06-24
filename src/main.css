@@ -62,3 +62,12 @@ h1 {
   float: right;
   overflow: auto;
 }
+
+.link-share {
+  display: inline-block;
+  padding: 10px;
+  margin: 20px;
+}
+
+.link-share a {
+}

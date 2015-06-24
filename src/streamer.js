@@ -58,29 +58,13 @@ exports.join = function stream (ctx) {
   const viewLink = window.location.href.replace('stream', 'view')
 
   $('#roomId').text(room)
-  $('#viewLink').text(viewLink)
-  $('#viewLink')[0].href = viewLink
 
-  // generate a QRCode for easy sharing
-  new QRCode($('#qrcode')[0], { // eslint-disable-line
-    text: window.location.href.replace('stream', 'view'),
-    width: 128,
-    height: 128,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  })
+  var streamerLink = new LinkShare(window.location.href)
+  var viewerLink = new LinkShare(viewLink)
 
-  window.twttr.ready(() => {
-    window.twttr.widgets.createShareButton(viewLink, document.getElementById('twitter'), {
-      text: 'Live on #WebVR:',
-      hashtags: 'cardboard',
-      size: 'large',
-      count: 'none'
-    })
-  })
+  streamerLink.appendTo($('#stream-box'))
+  viewerLink.appendTo($('#view-box'))
 
-  //
   if (navigator.getUserMedia) {
     let usersConnected = 0
     $('#user-count').text(usersConnected)
@@ -114,10 +98,39 @@ exports.join = function stream (ctx) {
 
 class LinkShare {
   constructor (link) {
-    this.element = $('<div class="link-share"></div>')
+    this.link = link
+    this.element = $('<div></div>')
     this.qrcode = $('<div></div>')
-    this.link = $('<a></a>', {href: link})
-    // this.tweetButton = 
+    this.twitter = $('<div></div>')
+    this.linkElement = $('<a>' + link + '</a>', {href: link})
+
+    this.element
+      .append(this.qrcode)
+      .append(this.linkElement)
+      .append(this.twitter)
+  }
+
+  appendTo (elem) {
+    this.element.appendTo(elem)
+
+    // generate a QRCode for easy sharing
+    new QRCode(this.qrcode[0], { // eslint-disable-line
+      text: this.link,
+      width: 512,
+      height: 512,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    })
+
+    window.twttr.ready(() => {
+      window.twttr.widgets.createShareButton(this.link, this.twitter[0], {
+        text: 'Live on #WebVR:',
+        hashtags: 'cardboard',
+        size: 'large',
+        count: 'none'
+      })
+    })
   }
 }
 

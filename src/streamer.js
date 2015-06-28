@@ -1,5 +1,6 @@
 let $ = require('zepto')
 let quickconnect = require('rtc-quickconnect')
+let freeice = require('freeice')
 let QRCode = require('qrcode')
 
 navigator.getUserMedia = (navigator.getUserMedia ||
@@ -69,7 +70,10 @@ exports.join = function stream (ctx) {
     let usersConnected = 0
     $('#user-count').text(usersConnected)
 
-    let rtcStream = quickconnect('https://switchboard.rtc.io/', {room: room})
+    let rtcStream = quickconnect('https://switchboard.rtc.io/', {
+      room: room,
+      iceServers: freeice()
+    })
       .reactive()
       .on('call:started', (id, pc, data) => {
         console.log('started streaming!')

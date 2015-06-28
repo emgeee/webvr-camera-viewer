@@ -1,5 +1,6 @@
 let $ = require('zepto')
 let quickconnect = require('rtc-quickconnect')
+let freeice = require('freeice')
 
 module.exports = function view (ctx) {
   let THREE = require('three')
@@ -82,9 +83,12 @@ module.exports = function view (ctx) {
   // Array to Maintain connected screens
   let screens = []
 
-  let blah = 0
+  let screenIndex = 0
 
-  let rtcStream = quickconnect('https://switchboard.rtc.io/', {room: room})
+  let rtcStream = quickconnect('https://switchboard.rtc.io/', {
+    room: room,
+    iceServers: freeice()
+  })
     .on('call:started', (id, pc, data) => {
       console.log('call started with', id, data)
     })
@@ -98,10 +102,10 @@ module.exports = function view (ctx) {
       // only create a new screen for streaming connecctions
       if (stream.label !== 'default') {
         let screen = new Screen(stream)
-        screen.rotation = blah * Math.PI / 4
+        screen.rotation = screenIndex * Math.PI / 4
         scene.add(screen.mesh)
         screens.push(screen)
-        blah++
+        screenIndex++
       }
     })
     .on('stream:removed', (id) => {

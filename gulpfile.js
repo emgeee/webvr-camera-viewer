@@ -102,9 +102,10 @@ function serve (done) {
       baseDir: './public'
     },
     port: 3000,
+    tunnel: true,
 
     open: !!$.util.env.open,
-    offline: true,
+    // offline: true,
     notify: false
   }, done)
 }

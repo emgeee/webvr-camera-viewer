@@ -2,52 +2,11 @@ let $ = require('zepto')
 let quickconnect = require('rtc-quickconnect')
 let freeice = require('freeice')
 
+let Screen = require('./classes/Screen.js')
+
 module.exports = function view (ctx) {
   let THREE = require('three')
   let WebVRManager = require('WebVRManager')
-
-  class Screen {
-    constructor (stream, id) {
-      this.id = id // stream ID
-      this.stream = stream
-
-      this.width = 1280
-      this.height = 768
-
-      this.video = document.createElement('video')
-      this.video.width = this.width
-      this.video.height = this.height
-      this.video.autoplay = true
-
-      this.video.src = window.URL.createObjectURL(stream)
-
-      this.geometry = new THREE.PlaneBufferGeometry(this.width, this.height)
-
-      // translate geometry away from the origin to allow rotation
-      this.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, -1800))
-
-      this.videoTexture = new THREE.Texture(this.video)
-      this.videoTexture.minFilter = THREE.NearestFilter
-
-      this.material = new THREE.MeshBasicMaterial({
-        map: this.videoTexture,
-        side: THREE.DoubleSide
-      })
-
-      this.mesh = new THREE.Mesh(this.geometry, this.material)
-      this.rotation = 0
-    }
-
-    update () {
-      if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
-        this.videoTexture.needsUpdate = true
-      }
-
-      if (this.mesh.rotation.y < this.rotation) {
-        this.mesh.rotation.y += Math.PI / 128
-      }
-    }
-  }
 
   const room = ctx.params.id
   console.log(room)
@@ -86,9 +45,9 @@ module.exports = function view (ctx) {
   let screenIndex = 0
 
   let rtcStream = quickconnect('https://switchboard.rtc.io/', {
-    room: room,
-    iceServers: freeice()
-  })
+      room: room,
+      iceServers: freeice()
+    })
     .on('call:started', (id, pc, data) => {
       console.log('call started with', id, data)
     })

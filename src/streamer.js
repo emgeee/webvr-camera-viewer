@@ -1,7 +1,11 @@
+'use strict'
+
 let $ = require('zepto')
 let quickconnect = require('rtc-quickconnect')
 let freeice = require('freeice')
-let QRCode = require('qrcode')
+
+let LinkShare = require('./classes/LinkShare.js')
+let VideoControlPanel = require('./classes/VideoControlPanel.js')
 
 navigator.getUserMedia = (navigator.getUserMedia ||
                           navigator.webkitGetUserMedia ||
@@ -31,12 +35,6 @@ function getVideoDevices () {
       resolve([{}])
     }
 
-  })
-}
-
-function openVideoStream (options) {
-  return new Promise((resolve, reject) => {
-    navigator.getUserMedia(options, resolve, reject)
   })
 }
 
@@ -97,111 +95,5 @@ exports.join = function stream (ctx) {
 
   } else {
     console.error('no webcam')
-  }
-}
-
-class LinkShare {
-  constructor (link) {
-    this.link = link
-    this.element = $('<div></div>')
-    this.qrcode = $('<div></div>')
-    this.twitter = $('<div></div>')
-    this.linkElement = $('<a>' + link + '</a>', {href: link})
-
-    this.element
-      .append(this.qrcode)
-      .append(this.linkElement)
-      .append(this.twitter)
-  }
-
-  appendTo (elem) {
-    this.element.appendTo(elem)
-
-    // generate a QRCode for easy sharing
-    new QRCode(this.qrcode[0], { // eslint-disable-line
-      text: this.link,
-      width: 512,
-      height: 512,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    })
-
-    window.twttr.ready(() => {
-      window.twttr.widgets.createShareButton(this.link, this.twitter[0], {
-        text: 'Live on #WebVR:',
-        hashtags: 'cardboard',
-        size: 'large',
-        count: 'none'
-      })
-    })
-  }
-}
-
-class VideoControlPanel {
-  constructor (device, rtcStream) {
-    this.element = $('<div class="video-control"></div>')
-    this.device = device
-    this.rtcStream = rtcStream
-
-    // create various HTML elements
-    this.startButton = $('<button>Start Feed</button>')
-    this.stopButton = $('<button>Stop Feed</button>')
-    this.streamingStatusIndicator = $('<div class="streaming-indicator" style="color:red;">not streaming</div>')
-    this.video = $('<video></video>')
-    this.video[0].autoplay = true
-
-    this.startButton.on('click', (e) => {
-      this.startFeed()
-    })
-
-    this.stopButton.on('click', (e) => {
-      this.stopFeed()
-    })
-
-    this.element
-      .append($('<div class="streaming-buttons"></div>').append(this.startButton).append(this.stopButton))
-      .append(this.streamingStatusIndicator)
-      .append(this.video)
-  }
-
-  // Start streaming a camera feed over WebRTC
-  startFeed () {
-    if (!this.stream) {
-      let options
-      if (this.device.id) {
-        options = {
-          video: {
-            optional: [{
-              sourceId: this.device.id
-            }]
-          }
-        }
-      } else {
-        options = {video: true}
-      }
-
-      openVideoStream(options)
-        .then((stream) => {
-          this.stream = stream
-          this.video[0].src = window.URL.createObjectURL(stream)
-
-          // add stream to the rtc Stream
-          this.rtcStream.addStream(stream)
-          this.streamingStatusIndicator.text('streaming!')
-          this.streamingStatusIndicator.css('color', 'green')
-        })
-    } else {
-      this.rtcStream.addStream(this.stream)
-      this.streamingStatusIndicator.text('streaming!')
-      this.streamingStatusIndicator.css('color', 'green')
-    }
-  }
-
-  // Stop streaming a camera feed
-  stopFeed () {
-    this.rtcStream.removeStream(this.stream)
-    this.streamingStatusIndicator.text('not streaming')
-    this.streamingStatusIndicator.css('color', 'red')
   }
 }

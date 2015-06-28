@@ -91,6 +91,11 @@ function copyTemplates () {
     .pipe(gulp.dest('./public'))
 }
 
+function copyAssets () {
+  return gulp.src('./src/assets/**')
+    .pipe(gulp.dest('./public/assets'))
+}
+
 function css () {
   return gulp.src('./src/main.css')
     .pipe(gulp.dest('./public'))
@@ -128,9 +133,10 @@ function watch (done) {
 
 gulp.task('js', javascript)
 gulp.task('css', css)
+gulp.task('assets', copyAssets)
 gulp.task('copyJs', copyJs)
 gulp.task('copyTemplates', copyTemplates)
 gulp.task('serve', serve)
-gulp.task('watch', ['serve', 'css', 'copyJs', 'copyTemplates'], watch)
+gulp.task('watch', ['serve', 'assets', 'css', 'copyJs', 'copyTemplates'], watch)
 gulp.task('default', ['watch'])
 

@@ -9,12 +9,30 @@ module.exports = function view (ctx) {
   let WebVRManager = require('WebVRManager')
 
   const room = ctx.params.id
-  console.log(room)
 
   // const width = 640
   // const height = 480
   const width = window.innerWidth
   const height = window.innerHeight
+
+  /**
+   * create RTC connection
+   */
+  // Array to Maintain connected screens
+  let screens = []
+
+  let screenIndex = 0
+
+  let rtcStream = quickconnect('https://switchboard.rtc.io/', {
+      room: room,
+      iceServers: freeice()
+    })
+    .on('call:started', (id, pc, data) => {
+      console.log('call started with', id, data)
+    })
+    .on('call:ended', (id) => {
+      console.log('call ended with', id)
+    })
 
   /**
    * Begin VR scene
@@ -23,6 +41,34 @@ module.exports = function view (ctx) {
   // configure camera
   let scene = new THREE.Scene()
   let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000)
+  camera.position.y = 1.8 // set height in meters
+
+  let floorTexture = THREE.ImageUtils.loadTexture('assets/grid.png')
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping
+  floorTexture.repeat.set(100, 100)
+  let floorMaterial = new THREE.MeshBasicMaterial({
+    map: floorTexture,
+    side: THREE.DoubleSide
+  })
+  let floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 1)
+  let floor = new THREE.Mesh(floorGeometry, floorMaterial)
+  // floor.position.y = -0.5
+  floor.rotation.x = Math.PI / 2
+  scene.add(floor)
+
+  // let light = new THREE.PointLight(0xffffff)
+  // light.position.set(0, 250, 0)
+  // scene.add(light)
+  // var ambientLight = new THREE.AmbientLight(0x111111)
+
+  // let textureCube = THREE.ImageUtils.loadTextCube([
+  //   'assets/posx.jpg',
+  //   'assets/negx.jpg',
+  //   'assets/posy.jpg',
+  //   'assets/negy.jpg',
+  //   'assets/posz.jpg',
+  //   'assets/negz.jpg'
+  // ])
 
   let controls = new THREE.VRControls(camera)
 
@@ -39,26 +85,10 @@ module.exports = function view (ctx) {
   // create WebVR manager
   let manager = new WebVRManager(renderer, effect, {hideButton: false})
 
-  // Array to Maintain connected screens
-  let screens = []
-
-  let screenIndex = 0
-
-  let rtcStream = quickconnect('https://switchboard.rtc.io/', {
-      room: room,
-      iceServers: freeice()
-    })
-    .on('call:started', (id, pc, data) => {
-      console.log('call started with', id, data)
-    })
-    .on('call:ended', (id) => {
-      console.log('call ended with', id)
-    })
+  rtcStream
     .on('stream:added', (id, stream, data) => {
-
       console.log('stream added from', id, stream)
-
-      // only create a new screen for streaming connecctions
+      // only create a new screen for streaming connections
       if (stream.label !== 'default') {
         let screen = new Screen(stream)
         screen.rotation = screenIndex * Math.PI / 4

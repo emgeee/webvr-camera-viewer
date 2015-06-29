@@ -4,6 +4,8 @@
  * Handles creation of new screen inside WebGL space
  */
 
+let TWEEN = require('tween.js');
+
 const STEP = 128
 const ROTATION_SPEED = Math.PI / STEP
 
@@ -29,8 +31,7 @@ module.exports = class Screen {
 
     const eyeLevel = 1.8 // corresponds to height of camera
 
-    this.rotation = 0
-    this._rotation = 0
+    this.theta = 0
 
     this.video = document.createElement('video')
     this.video.width = this.width
@@ -72,18 +73,31 @@ module.exports = class Screen {
     if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
       this.videoTexture.needsUpdate = true
     }
+  }
 
-    if (Math.abs(this.rotation - this._rotation) < STEP) {
-      this._rotation = this.rotation
+  rotate (newTheta) {
+    let self = this
+
+    const MOVE = 0.1
+
+    console.log(this.id, this.theta, newTheta)
+    if (this.theta === newTheta) {
+      return
     }
 
-    if (this._rotation < this.rotation) {
-      this._rotation += ROTATION_SPEED
-    } else if (this._rotation > this.rotation) {
-      this._rotation -= ROTATION_SPEED
-    }
+    this.mesh.position.z += MOVE
 
-    this.mesh.rotation.y = this._rotation
+    let tween = new TWEEN.Tween({theta: this.theta})
+      .to({theta: newTheta}, 1500)
+      .easing(TWEEN.Easing.Quadratic.InOut)
+      .onUpdate(function () {
+        self.mesh.rotation.y = this.theta
+      })
+      .onComplete(function () {
+        self.mesh.position.z -= MOVE
+        self.theta = newTheta
+      })
+      .start()
   }
 
 }

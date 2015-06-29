@@ -1,6 +1,7 @@
 let $ = require('zepto')
 let quickconnect = require('rtc-quickconnect')
 let freeice = require('freeice')
+let TWEEN = require('tween.js');
 
 let Screen = require('./classes/Screen.js')
 
@@ -51,7 +52,6 @@ module.exports = function view (ctx) {
   })
   let floorGeometry = new THREE.PlaneBufferGeometry(100, 100, 1, 1)
   let floor = new THREE.Mesh(floorGeometry, floorMaterial)
-  // floor.position.y = -0.5
   floor.rotation.x = Math.PI / 2
   scene.add(floor)
 
@@ -93,15 +93,17 @@ module.exports = function view (ctx) {
       resetScreens(screens)
     })
 
-  function animate () {
+  function animate (time) {
     for (let i = 0; i < screens.length; i++) {
       screens[i].update()
     }
 
     controls.update()
+    TWEEN.update(time)
 
     // renderer.render(scene, camera)
     manager.render(scene, camera)
+
     window.requestAnimationFrame(animate)
   }
 
@@ -129,8 +131,9 @@ module.exports = function view (ctx) {
 
 // Layout screen rotations
 function resetScreens (screens) {
-  for (let i = 0; i < screens.length; i++) {
-    screens[i].rotation = i * Math.PI / 3
-  }
+  screens.forEach((screen, i) => {
+    console.log('i', i)
+    screens[i].rotate(i * Math.PI / 3)
+  })
 }
 

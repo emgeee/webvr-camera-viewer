@@ -52,6 +52,7 @@
     "pyrsmk-toast": "^1.2.4",
     "rtc-quickconnect": "^4.3.1",
     "stringify": "^3.1.0",
+    "tween.js": "^0.14.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.2.2"

@@ -111,7 +111,6 @@ module.exports = function view (ctx) {
 
   // Reset the position sensor when 'z' pressed.
   function onKey (event) {
-    console.log(event.keyCode)
     switch (event.keyCode) {
       case 90: // z
         console.log('reseting sensor')
@@ -132,7 +131,6 @@ module.exports = function view (ctx) {
 // Layout screen rotations
 function resetScreens (screens) {
   screens.forEach((screen, i) => {
-    console.log('i', i)
     screens[i].rotate(i * Math.PI / 3)
   })
 }

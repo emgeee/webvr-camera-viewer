@@ -6,9 +6,6 @@
 
 let TWEEN = require('tween.js');
 
-const STEP = 128
-const ROTATION_SPEED = Math.PI / STEP
-
 module.exports = class Screen {
   constructor (stream) {
     // neew to require here so it will have been loaded
@@ -80,7 +77,6 @@ module.exports = class Screen {
 
     const MOVE = 0.1
 
-    console.log(this.id, this.theta, newTheta)
     if (this.theta === newTheta) {
       return
     }

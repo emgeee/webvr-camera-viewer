@@ -21,8 +21,6 @@ module.exports = function view (ctx) {
   // Array to Maintain connected screens
   let screens = []
 
-  let screenIndex = 0
-
   let rtcStream = quickconnect('https://switchboard.rtc.io/', {
       room: room,
       iceServers: freeice()
@@ -43,6 +41,7 @@ module.exports = function view (ctx) {
   let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000)
   camera.position.y = 1.8 // set height in meters
 
+  // create floor texture
   let floorTexture = THREE.ImageUtils.loadTexture('assets/grid.png')
   floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping
   floorTexture.repeat.set(100, 100)
@@ -50,27 +49,13 @@ module.exports = function view (ctx) {
     map: floorTexture,
     side: THREE.DoubleSide
   })
-  let floorGeometry = new THREE.PlaneGeometry(100, 100, 1, 1)
+  let floorGeometry = new THREE.PlaneBufferGeometry(100, 100, 1, 1)
   let floor = new THREE.Mesh(floorGeometry, floorMaterial)
   // floor.position.y = -0.5
   floor.rotation.x = Math.PI / 2
   scene.add(floor)
 
-  // let light = new THREE.PointLight(0xffffff)
-  // light.position.set(0, 250, 0)
-  // scene.add(light)
-  // var ambientLight = new THREE.AmbientLight(0x111111)
-
-  // let textureCube = THREE.ImageUtils.loadTextCube([
-  //   'assets/posx.jpg',
-  //   'assets/negx.jpg',
-  //   'assets/posy.jpg',
-  //   'assets/negy.jpg',
-  //   'assets/posz.jpg',
-  //   'assets/negz.jpg'
-  // ])
-
-  let controls = new THREE.VRControls(camera)
+  let controls = new THREE.VRControls(camera, (err) => { console.log(err) })
 
   // create renderer
   let renderer = new THREE.WebGLRenderer({antialias: true})
@@ -86,25 +71,26 @@ module.exports = function view (ctx) {
   let manager = new WebVRManager(renderer, effect, {hideButton: false})
 
   rtcStream
-    .on('stream:added', (id, stream, data) => {
-      console.log('stream added from', id, stream)
+    .on('stream:added', (clientId, stream, data) => {
+      console.log('stream added from', clientId, stream)
       // only create a new screen for streaming connections
       if (stream.label !== 'default') {
         let screen = new Screen(stream)
-        screen.rotation = screenIndex * Math.PI / 4
-        scene.add(screen.mesh)
         screens.push(screen)
-        screenIndex++
+        screen.add(scene)
+
+        resetScreens(screens)
       }
     })
-    .on('stream:removed', (id) => {
+    .on('stream:removed', (clientId, stream) => {
       for (let i = 0; i < screens.length; i++) {
-        if (screens[i].id === id) {
-          scene.remove(screens[i].mesh)
+        if (screens[i].id === stream.id) {
           screens.splice(i, 1)
           break
         }
       }
+
+      resetScreens(screens)
     })
 
   function animate () {
@@ -123,9 +109,12 @@ module.exports = function view (ctx) {
 
   // Reset the position sensor when 'z' pressed.
   function onKey (event) {
-    if (event.keyCode === 90) { // z
-      console.log('reseting sensor')
-      controls.resetSensor()
+    console.log(event.keyCode)
+    switch (event.keyCode) {
+      case 90: // z
+        console.log('reseting sensor')
+        controls.resetSensor()
+        break
     }
   }
   window.addEventListener('keydown', onKey, true)
@@ -136,5 +125,12 @@ module.exports = function view (ctx) {
     effect.setSize(window.innerWidth, window.innerHeight)
   }
   window.addEventListener('resize', onWindowResize, false)
+}
+
+// Layout screen rotations
+function resetScreens (screens) {
+  for (let i = 0; i < screens.length; i++) {
+    screens[i].rotation = i * Math.PI / 3
+  }
 }
 

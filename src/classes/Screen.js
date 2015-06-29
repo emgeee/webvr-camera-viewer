@@ -4,13 +4,22 @@
  * Handles creation of new screen inside WebGL space
  */
 
+const STEP = 128
+const ROTATION_SPEED = Math.PI / STEP
+
 module.exports = class Screen {
-  constructor (stream, id) {
+  constructor (stream) {
     // neew to require here so it will have been loaded
     let THREE = require('three')
 
-    this.id = id // stream ID
+    this.id = stream.id // stream ID
     this.stream = stream
+
+    // automatically remove stream from scene when ended
+    this.stream.onended = () => {
+      console.log('stream removed onended')
+      this.remove()
+    }
 
     // set screen to have 16:9 aspect ratio with width === 1 meter
     this.width = 1
@@ -19,6 +28,9 @@ module.exports = class Screen {
     this.screenDistance = 1 // distance in meters between screen and camera
 
     const eyeLevel = 1.8 // corresponds to height of camera
+
+    this.rotation = 0
+    this._rotation = 0
 
     this.video = document.createElement('video')
     this.video.width = this.width
@@ -42,17 +54,37 @@ module.exports = class Screen {
 
     this.mesh = new THREE.Mesh(this.geometry, this.material)
     this.mesh.position.y = eyeLevel
-    this.rotation = 0
+  }
+
+  add (scene) {
+    this.scene = scene
+    this.scene.add(this.mesh)
+  }
+
+  remove () {
+    if (this.scene) {
+      this.scene.remove(this.mesh)
+    }
   }
 
   update () {
+    // update to most recent camera frame
     if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
       this.videoTexture.needsUpdate = true
     }
 
-    if (this.mesh.rotation.y < this.rotation) {
-      this.mesh.rotation.y += Math.PI / 128
+    if (Math.abs(this.rotation - this._rotation) < STEP) {
+      this._rotation = this.rotation
     }
+
+    if (this._rotation < this.rotation) {
+      this._rotation += ROTATION_SPEED
+    } else if (this._rotation > this.rotation) {
+      this._rotation -= ROTATION_SPEED
+    }
+
+    this.mesh.rotation.y = this._rotation
   }
+
 }
 

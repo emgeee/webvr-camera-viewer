@@ -90,6 +90,192 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
+},{}],"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/index.js":[function(require,module,exports){
+/* jshint node: true */
+'use strict';
+
+var normalice = require('normalice');
+
+/**
+  # freeice
+
+  The `freeice` module is a simple way of getting random STUN or TURN server
+  for your WebRTC application.  The list of servers (just STUN at this stage)
+  were sourced from this [gist](https://gist.github.com/zziuni/3741933).
+
+  ## Example Use
+
+  The following demonstrates how you can use `freeice` with
+  [rtc-quickconnect](https://github.com/rtc-io/rtc-quickconnect):
+
+  <<< examples/quickconnect.js
+
+  As the `freeice` module generates ice servers in a list compliant with the
+  WebRTC spec you will be able to use it with raw `RTCPeerConnection`
+  constructors and other WebRTC libraries.
+
+  ## Hey, don't use my STUN/TURN server!
+
+  If for some reason your free STUN or TURN server ends up in the
+  list of servers ([stun](https://github.com/DamonOehlman/freeice/blob/master/stun.json) or
+  [turn](https://github.com/DamonOehlman/freeice/blob/master/turn.json))
+  that is used in this module, you can feel
+  free to open an issue on this repository and those servers will be removed
+  within 24 hours (or sooner).  This is the quickest and probably the most
+  polite way to have something removed (and provides us some visibility
+  if someone opens a pull request requesting that a server is added).
+
+  ## Please add my server!
+
+  If you have a server that you wish to add to the list, that's awesome! I'm
+  sure I speak on behalf of a whole pile of WebRTC developers who say thanks.
+  To get it into the list, feel free to either open a pull request or if you
+  find that process a bit daunting then just create an issue requesting
+  the addition of the server (make sure you provide all the details, and if
+  you have a Terms of Service then including that in the PR/issue would be
+  awesome).
+
+  ## I know of a free server, can I add it?
+
+  Sure, if you do your homework and make sure it is ok to use (I'm currently
+  in the process of reviewing the terms of those STUN servers included from
+  the original list).  If it's ok to go, then please see the previous entry
+  for how to add it.
+
+  ## Current List of Servers
+
+  * current as at the time of last `README.md` file generation
+
+  ### STUN
+
+  <<< stun.json
+
+  ### TURN
+
+  <<< turn.json
+
+**/
+
+var freeice = module.exports = function(opts) {
+  // if a list of servers has been provided, then use it instead of defaults
+  var servers = {
+    stun: (opts || {}).stun || require('./stun.json'),
+    turn: (opts || {}).turn || require('./turn.json')
+  };
+
+  var stunCount = (opts || {}).stunCount || 2;
+  var turnCount = (opts || {}).turnCount || 0;
+  var selected;
+
+  function getServers(type, count) {
+    var out = [];
+    var input = [].concat(servers[type]);
+    var idx;
+
+    while (input.length && out.length < count) {
+      idx = (Math.random() * input.length) | 0;
+      out = out.concat(input.splice(idx, 1));
+    }
+
+    return out.map(function(url) {
+      return normalice(type + ':' + url);
+    });
+  }
+
+  // add stun servers
+  selected = [].concat(getServers('stun', stunCount));
+
+  if (turnCount) {
+    selected = selected.concat(getServers('turn', turnCount));
+  }
+
+  return selected;
+};
+
+},{"./stun.json":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/stun.json","./turn.json":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/turn.json","normalice":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/node_modules/normalice/index.js"}],"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/node_modules/normalice/index.js":[function(require,module,exports){
+/**
+  # normalice
+
+  Normalize an ice server configuration object (or plain old string) into a format
+  that is usable in all browsers supporting WebRTC.  Primarily this module is designed
+  to help with the transition of the `url` attribute of the configuration object to
+  the `urls` attribute.
+
+  ## Example Usage
+
+  <<< examples/simple.js
+
+**/
+
+var protocols = [
+  'stun:',
+  'turn:'
+];
+
+module.exports = function(input) {
+  var url = (input || {}).url || input;
+  var protocol;
+  var parts;
+  var output = {};
+
+  // if we don't have a string url, then allow the input to passthrough
+  if (typeof url != 'string' && (! (url instanceof String))) {
+    return input;
+  }
+
+  // trim the url string, and convert to an array
+  url = url.trim();
+
+  // if the protocol is not known, then passthrough
+  protocol = protocols[protocols.indexOf(url.slice(0, 5))];
+  if (! protocol) {
+    return input;
+  }
+
+  // now let's attack the remaining url parts
+  url = url.slice(5);
+  parts = url.split('@');
+
+  output.username = input.username;
+  output.credential = input.credential;
+  // if we have an authentication part, then set the credentials
+  if (parts.length > 1) {
+    url = parts[1];
+    parts = parts[0].split(':');
+
+    // add the output credential and username
+    output.username = parts[0];
+    output.credential = (input || {}).credential || parts[1] || '';
+  }
+
+  output.url = protocol + url;
+  output.urls = [ output.url ];
+
+  return output;
+};
+
+},{}],"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/stun.json":[function(require,module,exports){
+module.exports=[
+  "stun.l.google.com:19302",
+  "stun1.l.google.com:19302",
+  "stun2.l.google.com:19302",
+  "stun3.l.google.com:19302",
+  "stun4.l.google.com:19302",
+  "stun.ekiga.net",
+  "stun.ideasip.com",
+  "stun.rixtelecom.se",
+  "stun.schlund.de",
+  "stun.stunprotocol.org:3478",
+  "stun.voiparound.com",
+  "stun.voipbuster.com",
+  "stun.voipstunt.com",
+  "stun.voxgratia.org",
+  "stun.services.mozilla.com"
+]
+
+},{}],"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/turn.json":[function(require,module,exports){
+module.exports=[]
+
 },{}],"/Users/matt/code/webvr-camera-viewer/node_modules/page/index.js":[function(require,module,exports){
 (function (process){
   /* globals require, module */
@@ -6935,6 +7121,764 @@ module.exports = function() {
     };
   }
 };
+},{}],"/Users/matt/code/webvr-camera-viewer/node_modules/tween.js/index.js":[function(require,module,exports){
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/sole/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/sole/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+
+// Date.now shim for (ahem) Internet Explo(d|r)er
+if ( Date.now === undefined ) {
+
+	Date.now = function () {
+
+		return new Date().valueOf();
+
+	};
+
+}
+
+var TWEEN = TWEEN || ( function () {
+
+	var _tweens = [];
+
+	return {
+
+		REVISION: '14',
+
+		getAll: function () {
+
+			return _tweens;
+
+		},
+
+		removeAll: function () {
+
+			_tweens = [];
+
+		},
+
+		add: function ( tween ) {
+
+			_tweens.push( tween );
+
+		},
+
+		remove: function ( tween ) {
+
+			var i = _tweens.indexOf( tween );
+
+			if ( i !== -1 ) {
+
+				_tweens.splice( i, 1 );
+
+			}
+
+		},
+
+		update: function ( time ) {
+
+			if ( _tweens.length === 0 ) return false;
+
+			var i = 0;
+
+			time = time !== undefined ? time : ( typeof window !== 'undefined' && window.performance !== undefined && window.performance.now !== undefined ? window.performance.now() : Date.now() );
+
+			while ( i < _tweens.length ) {
+
+				if ( _tweens[ i ].update( time ) ) {
+
+					i++;
+
+				} else {
+
+					_tweens.splice( i, 1 );
+
+				}
+
+			}
+
+			return true;
+
+		}
+	};
+
+} )();
+
+TWEEN.Tween = function ( object ) {
+
+	var _object = object;
+	var _valuesStart = {};
+	var _valuesEnd = {};
+	var _valuesStartRepeat = {};
+	var _duration = 1000;
+	var _repeat = 0;
+	var _yoyo = false;
+	var _isPlaying = false;
+	var _reversed = false;
+	var _delayTime = 0;
+	var _startTime = null;
+	var _easingFunction = TWEEN.Easing.Linear.None;
+	var _interpolationFunction = TWEEN.Interpolation.Linear;
+	var _chainedTweens = [];
+	var _onStartCallback = null;
+	var _onStartCallbackFired = false;
+	var _onUpdateCallback = null;
+	var _onCompleteCallback = null;
+	var _onStopCallback = null;
+
+	// Set all starting values present on the target object
+	for ( var field in object ) {
+
+		_valuesStart[ field ] = parseFloat(object[field], 10);
+
+	}
+
+	this.to = function ( properties, duration ) {
+
+		if ( duration !== undefined ) {
+
+			_duration = duration;
+
+		}
+
+		_valuesEnd = properties;
+
+		return this;
+
+	};
+
+	this.start = function ( time ) {
+
+		TWEEN.add( this );
+
+		_isPlaying = true;
+
+		_onStartCallbackFired = false;
+
+		_startTime = time !== undefined ? time : ( typeof window !== 'undefined' && window.performance !== undefined && window.performance.now !== undefined ? window.performance.now() : Date.now() );
+		_startTime += _delayTime;
+
+		for ( var property in _valuesEnd ) {
+
+			// check if an Array was provided as property value
+			if ( _valuesEnd[ property ] instanceof Array ) {
+
+				if ( _valuesEnd[ property ].length === 0 ) {
+
+					continue;
+
+				}
+
+				// create a local copy of the Array with the start value at the front
+				_valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
+
+			}
+
+			_valuesStart[ property ] = _object[ property ];
+
+			if( ( _valuesStart[ property ] instanceof Array ) === false ) {
+				_valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
+			}
+
+			_valuesStartRepeat[ property ] = _valuesStart[ property ] || 0;
+
+		}
+
+		return this;
+
+	};
+
+	this.stop = function () {
+
+		if ( !_isPlaying ) {
+			return this;
+		}
+
+		TWEEN.remove( this );
+		_isPlaying = false;
+
+		if ( _onStopCallback !== null ) {
+
+			_onStopCallback.call( _object );
+
+		}
+
+		this.stopChainedTweens();
+		return this;
+
+	};
+
+	this.stopChainedTweens = function () {
+
+		for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++ ) {
+
+			_chainedTweens[ i ].stop();
+
+		}
+
+	};
+
+	this.delay = function ( amount ) {
+
+		_delayTime = amount;
+		return this;
+
+	};
+
+	this.repeat = function ( times ) {
+
+		_repeat = times;
+		return this;
+
+	};
+
+	this.yoyo = function( yoyo ) {
+
+		_yoyo = yoyo;
+		return this;
+
+	};
+
+
+	this.easing = function ( easing ) {
+
+		_easingFunction = easing;
+		return this;
+
+	};
+
+	this.interpolation = function ( interpolation ) {
+
+		_interpolationFunction = interpolation;
+		return this;
+
+	};
+
+	this.chain = function () {
+
+		_chainedTweens = arguments;
+		return this;
+
+	};
+
+	this.onStart = function ( callback ) {
+
+		_onStartCallback = callback;
+		return this;
+
+	};
+
+	this.onUpdate = function ( callback ) {
+
+		_onUpdateCallback = callback;
+		return this;
+
+	};
+
+	this.onComplete = function ( callback ) {
+
+		_onCompleteCallback = callback;
+		return this;
+
+	};
+
+	this.onStop = function ( callback ) {
+
+		_onStopCallback = callback;
+		return this;
+
+	};
+
+	this.update = function ( time ) {
+
+		var property;
+
+		if ( time < _startTime ) {
+
+			return true;
+
+		}
+
+		if ( _onStartCallbackFired === false ) {
+
+			if ( _onStartCallback !== null ) {
+
+				_onStartCallback.call( _object );
+
+			}
+
+			_onStartCallbackFired = true;
+
+		}
+
+		var elapsed = ( time - _startTime ) / _duration;
+		elapsed = elapsed > 1 ? 1 : elapsed;
+
+		var value = _easingFunction( elapsed );
+
+		for ( property in _valuesEnd ) {
+
+			var start = _valuesStart[ property ] || 0;
+			var end = _valuesEnd[ property ];
+
+			if ( end instanceof Array ) {
+
+				_object[ property ] = _interpolationFunction( end, value );
+
+			} else {
+
+				// Parses relative end values with start as base (e.g.: +10, -3)
+				if ( typeof(end) === "string" ) {
+					end = start + parseFloat(end, 10);
+				}
+
+				// protect against non numeric properties.
+				if ( typeof(end) === "number" ) {
+					_object[ property ] = start + ( end - start ) * value;
+				}
+
+			}
+
+		}
+
+		if ( _onUpdateCallback !== null ) {
+
+			_onUpdateCallback.call( _object, value );
+
+		}
+
+		if ( elapsed == 1 ) {
+
+			if ( _repeat > 0 ) {
+
+				if( isFinite( _repeat ) ) {
+					_repeat--;
+				}
+
+				// reassign starting values, restart by making startTime = now
+				for( property in _valuesStartRepeat ) {
+
+					if ( typeof( _valuesEnd[ property ] ) === "string" ) {
+						_valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ], 10);
+					}
+
+					if (_yoyo) {
+						var tmp = _valuesStartRepeat[ property ];
+						_valuesStartRepeat[ property ] = _valuesEnd[ property ];
+						_valuesEnd[ property ] = tmp;
+					}
+
+					_valuesStart[ property ] = _valuesStartRepeat[ property ];
+
+				}
+
+				if (_yoyo) {
+					_reversed = !_reversed;
+				}
+
+				_startTime = time + _delayTime;
+
+				return true;
+
+			} else {
+
+				if ( _onCompleteCallback !== null ) {
+
+					_onCompleteCallback.call( _object );
+
+				}
+
+				for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++ ) {
+
+					_chainedTweens[ i ].start( time );
+
+				}
+
+				return false;
+
+			}
+
+		}
+
+		return true;
+
+	};
+
+};
+
+
+TWEEN.Easing = {
+
+	Linear: {
+
+		None: function ( k ) {
+
+			return k;
+
+		}
+
+	},
+
+	Quadratic: {
+
+		In: function ( k ) {
+
+			return k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return k * ( 2 - k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
+			return - 0.5 * ( --k * ( k - 2 ) - 1 );
+
+		}
+
+	},
+
+	Cubic: {
+
+		In: function ( k ) {
+
+			return k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return --k * k * k + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
+			return 0.5 * ( ( k -= 2 ) * k * k + 2 );
+
+		}
+
+	},
+
+	Quartic: {
+
+		In: function ( k ) {
+
+			return k * k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return 1 - ( --k * k * k * k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
+			return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+
+		}
+
+	},
+
+	Quintic: {
+
+		In: function ( k ) {
+
+			return k * k * k * k * k;
+
+		},
+
+		Out: function ( k ) {
+
+			return --k * k * k * k * k + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
+			return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+
+		}
+
+	},
+
+	Sinusoidal: {
+
+		In: function ( k ) {
+
+			return 1 - Math.cos( k * Math.PI / 2 );
+
+		},
+
+		Out: function ( k ) {
+
+			return Math.sin( k * Math.PI / 2 );
+
+		},
+
+		InOut: function ( k ) {
+
+			return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+
+		}
+
+	},
+
+	Exponential: {
+
+		In: function ( k ) {
+
+			return k === 0 ? 0 : Math.pow( 1024, k - 1 );
+
+		},
+
+		Out: function ( k ) {
+
+			return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
+			return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+
+		}
+
+	},
+
+	Circular: {
+
+		In: function ( k ) {
+
+			return 1 - Math.sqrt( 1 - k * k );
+
+		},
+
+		Out: function ( k ) {
+
+			return Math.sqrt( 1 - ( --k * k ) );
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
+			return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+
+		}
+
+	},
+
+	Elastic: {
+
+		In: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+
+		},
+
+		Out: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+
+		},
+
+		InOut: function ( k ) {
+
+			var s, a = 0.1, p = 0.4;
+			if ( k === 0 ) return 0;
+			if ( k === 1 ) return 1;
+			if ( !a || a < 1 ) { a = 1; s = p / 4; }
+			else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+			if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+			return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
+
+		}
+
+	},
+
+	Back: {
+
+		In: function ( k ) {
+
+			var s = 1.70158;
+			return k * k * ( ( s + 1 ) * k - s );
+
+		},
+
+		Out: function ( k ) {
+
+			var s = 1.70158;
+			return --k * k * ( ( s + 1 ) * k + s ) + 1;
+
+		},
+
+		InOut: function ( k ) {
+
+			var s = 1.70158 * 1.525;
+			if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
+			return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+
+		}
+
+	},
+
+	Bounce: {
+
+		In: function ( k ) {
+
+			return 1 - TWEEN.Easing.Bounce.Out( 1 - k );
+
+		},
+
+		Out: function ( k ) {
+
+			if ( k < ( 1 / 2.75 ) ) {
+
+				return 7.5625 * k * k;
+
+			} else if ( k < ( 2 / 2.75 ) ) {
+
+				return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
+
+			} else if ( k < ( 2.5 / 2.75 ) ) {
+
+				return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+
+			} else {
+
+				return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+
+			}
+
+		},
+
+		InOut: function ( k ) {
+
+			if ( k < 0.5 ) return TWEEN.Easing.Bounce.In( k * 2 ) * 0.5;
+			return TWEEN.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+
+		}
+
+	}
+
+};
+
+TWEEN.Interpolation = {
+
+	Linear: function ( v, k ) {
+
+		var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = TWEEN.Interpolation.Utils.Linear;
+
+		if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
+		if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
+
+		return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+
+	},
+
+	Bezier: function ( v, k ) {
+
+		var b = 0, n = v.length - 1, pw = Math.pow, bn = TWEEN.Interpolation.Utils.Bernstein, i;
+
+		for ( i = 0; i <= n; i++ ) {
+			b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+		}
+
+		return b;
+
+	},
+
+	CatmullRom: function ( v, k ) {
+
+		var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = TWEEN.Interpolation.Utils.CatmullRom;
+
+		if ( v[ 0 ] === v[ m ] ) {
+
+			if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
+
+			return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+
+		} else {
+
+			if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
+			if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
+
+			return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+
+		}
+
+	},
+
+	Utils: {
+
+		Linear: function ( p0, p1, t ) {
+
+			return ( p1 - p0 ) * t + p0;
+
+		},
+
+		Bernstein: function ( n , i ) {
+
+			var fc = TWEEN.Interpolation.Utils.Factorial;
+			return fc( n ) / fc( i ) / fc( n - i );
+
+		},
+
+		Factorial: ( function () {
+
+			var a = [ 1 ];
+
+			return function ( n ) {
+
+				var s = 1, i;
+				if ( a[ n ] ) return a[ n ];
+				for ( i = n; i > 1; i-- ) s *= i;
+				return a[ n ] = s;
+
+			};
+
+		} )(),
+
+		CatmullRom: function ( p0, p1, p2, p3, t ) {
+
+			var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
+			return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+
+		}
+
+	}
+
+};
+
+module.exports=TWEEN;
 },{}],"/Users/matt/code/webvr-camera-viewer/src/app.js":[function(require,module,exports){
 (function (global){
 "use strict";
@@ -7000,7 +7944,7 @@ function home() {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./streamer.js":"/Users/matt/code/webvr-camera-viewer/src/streamer.js","./templates/main.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/main.tpl.html","./templates/stream.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/stream.tpl.html","./templates/view.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/view.tpl.html","./viewer.js":"/Users/matt/code/webvr-camera-viewer/src/viewer.js","page":"/Users/matt/code/webvr-camera-viewer/node_modules/page/index.js","pyrsmk-toast":"/Users/matt/code/webvr-camera-viewer/node_modules/pyrsmk-toast/src/toast.js"}],"/Users/matt/code/webvr-camera-viewer/src/streamer.js":[function(require,module,exports){
+},{"./streamer.js":"/Users/matt/code/webvr-camera-viewer/src/streamer.js","./templates/main.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/main.tpl.html","./templates/stream.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/stream.tpl.html","./templates/view.tpl.html":"/Users/matt/code/webvr-camera-viewer/src/templates/view.tpl.html","./viewer.js":"/Users/matt/code/webvr-camera-viewer/src/viewer.js","page":"/Users/matt/code/webvr-camera-viewer/node_modules/page/index.js","pyrsmk-toast":"/Users/matt/code/webvr-camera-viewer/node_modules/pyrsmk-toast/src/toast.js"}],"/Users/matt/code/webvr-camera-viewer/src/classes/LinkShare.js":[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -7009,96 +7953,9 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var $ = typeof window !== "undefined" ? window.$ : typeof global !== "undefined" ? global.$ : null;
-var quickconnect = require("rtc-quickconnect");
 var QRCode = typeof window !== "undefined" ? window.QRCode : typeof global !== "undefined" ? global.QRCode : null;
 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
-
-/*
- * Get an array of streams from various webcams. Only certain browsers support multiple streams
- */
-function getVideoDevices() {
-  return new Promise(function (resolve, reject) {
-
-    if (window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
-      window.MediaStreamTrack.getSources(function (sources) {
-        // filter out non-video streams
-        var videoSources = sources.filter(function (source) {
-          return source.kind === "video";
-        });
-        console.log(videoSources);
-
-        resolve(videoSources);
-      });
-    } else {
-      resolve([{}]);
-    }
-  });
-}
-
-function openVideoStream(options) {
-  return new Promise(function (resolve, reject) {
-    navigator.getUserMedia(options, resolve, reject);
-  });
-}
-
-exports.create = function createStream(ctx, next) {
-  var HASH_LENGTH = 5;
-  var POSSIBLE = "abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-
-  var id = "";
-
-  for (var i = 0; i < HASH_LENGTH; i++) {
-    id += POSSIBLE[Math.floor(Math.random() * POSSIBLE.length)];
-  }
-
-  ctx.params.id = id;
-  next();
-};
-
-exports.join = function stream(ctx) {
-  var room = ctx.params.id;
-  var viewLink = window.location.href.replace("stream", "view");
-
-  $("#roomId").text(room);
-
-  var streamerLink = new LinkShare(window.location.href);
-  var viewerLink = new LinkShare(viewLink);
-
-  streamerLink.appendTo($("#stream-box"));
-  viewerLink.appendTo($("#view-box"));
-
-  if (navigator.getUserMedia) {
-    (function () {
-      var usersConnected = 0;
-      $("#user-count").text(usersConnected);
-
-      var rtcStream = quickconnect("https://switchboard.rtc.io/", { room: room }).reactive().on("call:started", function (id, pc, data) {
-        console.log("started streaming!");
-        usersConnected++;
-        $("#user-count").text(usersConnected);
-      }).on("call:ended", function (id) {
-        usersConnected--;
-        $("#user-count").text(usersConnected);
-      });
-
-      // get list of possible video devices to stream
-      getVideoDevices().then(function (devices) {
-        console.log(devices);
-        devices.forEach(function (device) {
-          var controls = new VideoControlPanel(device, rtcStream);
-          controls.element.appendTo($("#app"));
-        });
-      });
-    })();
-  } else {
-    console.error("no webcam");
-  }
-};
-
-var LinkShare = (function () {
+module.exports = (function () {
   function LinkShare(link) {
     _classCallCheck(this, LinkShare);
 
@@ -7142,9 +7999,141 @@ var LinkShare = (function () {
   return LinkShare;
 })();
 
-var VideoControlPanel = (function () {
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{}],"/Users/matt/code/webvr-camera-viewer/src/classes/Screen.js":[function(require,module,exports){
+(function (global){
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+/*
+ * Handles creation of new screen inside WebGL space
+ */
+
+var TWEEN = require('tween.js');
+
+module.exports = (function () {
+  function Screen(stream) {
+    var _this = this;
+
+    _classCallCheck(this, Screen);
+
+    // neew to require here so it will have been loaded
+    var THREE = typeof window !== 'undefined' ? window.THREE : typeof global !== 'undefined' ? global.THREE : null;
+
+    this.id = stream.id; // stream ID
+    this.stream = stream;
+
+    // automatically remove stream from scene when ended
+    this.stream.onended = function () {
+      console.log('stream removed onended');
+      _this.remove();
+    };
+
+    // set screen to have 16:9 aspect ratio with width === 1 meter
+    this.width = 1;
+    this.height = 9 / 16;
+
+    this.screenDistance = 1; // distance in meters between screen and camera
+
+    var eyeLevel = 1.8; // corresponds to height of camera
+
+    this.theta = 0;
+
+    this.video = document.createElement('video');
+    this.video.width = this.width;
+    this.video.height = this.height;
+    this.video.autoplay = true;
+
+    this.video.src = window.URL.createObjectURL(stream);
+
+    this.geometry = new THREE.PlaneBufferGeometry(this.width, this.height);
+
+    // translate geometry away from the origin to allow rotation
+    this.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, -this.screenDistance));
+
+    this.videoTexture = new THREE.Texture(this.video);
+    this.videoTexture.minFilter = THREE.NearestFilter;
+
+    this.material = new THREE.MeshBasicMaterial({
+      map: this.videoTexture,
+      side: THREE.DoubleSide
+    });
+
+    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.mesh.position.y = eyeLevel;
+  }
+
+  _createClass(Screen, [{
+    key: 'add',
+    value: function add(scene) {
+      this.scene = scene;
+      this.scene.add(this.mesh);
+    }
+  }, {
+    key: 'remove',
+    value: function remove() {
+      if (this.scene) {
+        this.scene.remove(this.mesh);
+      }
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      // update to most recent camera frame
+      if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+        this.videoTexture.needsUpdate = true;
+      }
+    }
+  }, {
+    key: 'rotate',
+    value: function rotate(newTheta) {
+      var self = this;
+
+      var MOVE = 0.1;
+
+      if (this.theta === newTheta) {
+        return;
+      }
+
+      this.mesh.position.z += MOVE;
+
+      var tween = new TWEEN.Tween({ theta: this.theta }).to({ theta: newTheta }, 1500).easing(TWEEN.Easing.Quadratic.InOut).onUpdate(function () {
+        self.mesh.rotation.y = this.theta;
+      }).onComplete(function () {
+        self.mesh.position.z -= MOVE;
+        self.theta = newTheta;
+      }).start();
+    }
+  }]);
+
+  return Screen;
+})();
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{"tween.js":"/Users/matt/code/webvr-camera-viewer/node_modules/tween.js/index.js"}],"/Users/matt/code/webvr-camera-viewer/src/classes/VideoControlPanel.js":[function(require,module,exports){
+(function (global){
+"use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var $ = typeof window !== "undefined" ? window.$ : typeof global !== "undefined" ? global.$ : null;
+
+function openVideoStream(options) {
+  return new Promise(function (resolve, reject) {
+    navigator.getUserMedia(options, resolve, reject);
+  });
+}
+
+module.exports = (function () {
   function VideoControlPanel(device, rtcStream) {
-    var _this2 = this;
+    var _this = this;
 
     _classCallCheck(this, VideoControlPanel);
 
@@ -7160,11 +8149,11 @@ var VideoControlPanel = (function () {
     this.video[0].autoplay = true;
 
     this.startButton.on("click", function (e) {
-      _this2.startFeed();
+      _this.startFeed();
     });
 
     this.stopButton.on("click", function (e) {
-      _this2.stopFeed();
+      _this.stopFeed();
     });
 
     this.element.append($("<div class=\"streaming-buttons\"></div>").append(this.startButton).append(this.stopButton)).append(this.streamingStatusIndicator).append(this.video);
@@ -7175,7 +8164,7 @@ var VideoControlPanel = (function () {
 
     // Start streaming a camera feed over WebRTC
     value: function startFeed() {
-      var _this3 = this;
+      var _this2 = this;
 
       if (!this.stream) {
         var options = undefined;
@@ -7192,13 +8181,13 @@ var VideoControlPanel = (function () {
         }
 
         openVideoStream(options).then(function (stream) {
-          _this3.stream = stream;
-          _this3.video[0].src = window.URL.createObjectURL(stream);
+          _this2.stream = stream;
+          _this2.video[0].src = window.URL.createObjectURL(stream);
 
           // add stream to the rtc Stream
-          _this3.rtcStream.addStream(stream);
-          _this3.streamingStatusIndicator.text("streaming!");
-          _this3.streamingStatusIndicator.css("color", "green");
+          _this2.rtcStream.addStream(stream);
+          _this2.streamingStatusIndicator.text("streaming!");
+          _this2.streamingStatusIndicator.css("color", "green");
         });
       } else {
         this.rtcStream.addStream(this.stream);
@@ -7222,87 +8211,147 @@ var VideoControlPanel = (function () {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"rtc-quickconnect":"/Users/matt/code/webvr-camera-viewer/node_modules/rtc-quickconnect/index.js"}],"/Users/matt/code/webvr-camera-viewer/src/templates/main.tpl.html":[function(require,module,exports){
+},{}],"/Users/matt/code/webvr-camera-viewer/src/streamer.js":[function(require,module,exports){
+(function (global){
+"use strict";
+
+var $ = typeof window !== "undefined" ? window.$ : typeof global !== "undefined" ? global.$ : null;
+var quickconnect = require("rtc-quickconnect");
+var freeice = require("freeice");
+
+var LinkShare = require("./classes/LinkShare.js");
+var VideoControlPanel = require("./classes/VideoControlPanel.js");
+
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+
+/*
+ * Get an array of streams from various webcams. Only certain browsers support multiple streams
+ */
+function getVideoDevices() {
+  return new Promise(function (resolve, reject) {
+
+    if (window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+      window.MediaStreamTrack.getSources(function (sources) {
+        // filter out non-video streams
+        var videoSources = sources.filter(function (source) {
+          return source.kind === "video";
+        });
+        console.log(videoSources);
+
+        resolve(videoSources);
+      });
+    } else {
+      resolve([{}]);
+    }
+  });
+}
+
+exports.create = function createStream(ctx, next) {
+  var HASH_LENGTH = 5;
+  var POSSIBLE = "abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
+  var id = "";
+
+  for (var i = 0; i < HASH_LENGTH; i++) {
+    id += POSSIBLE[Math.floor(Math.random() * POSSIBLE.length)];
+  }
+
+  ctx.params.id = id;
+  next();
+};
+
+exports.join = function stream(ctx) {
+  var room = ctx.params.id;
+  var viewLink = window.location.href.replace("stream", "view");
+
+  $("#roomId").text(room);
+
+  var streamerLink = new LinkShare(window.location.href);
+  var viewerLink = new LinkShare(viewLink);
+
+  streamerLink.appendTo($("#stream-box"));
+  viewerLink.appendTo($("#view-box"));
+
+  if (navigator.getUserMedia) {
+    (function () {
+      var usersConnected = 0;
+      $("#user-count").text(usersConnected);
+
+      var rtcStream = quickconnect("https://switchboard.rtc.io/", {
+        room: room,
+        iceServers: freeice()
+      }).reactive().on("call:started", function (id, pc, data) {
+        console.log("started streaming!");
+        usersConnected++;
+        $("#user-count").text(usersConnected);
+      }).on("call:ended", function (id) {
+        usersConnected--;
+        $("#user-count").text(usersConnected);
+      });
+
+      // get list of possible video devices to stream
+      getVideoDevices().then(function (devices) {
+        console.log(devices);
+        devices.forEach(function (device) {
+          var controls = new VideoControlPanel(device, rtcStream);
+          controls.element.appendTo($("#app"));
+        });
+      });
+    })();
+  } else {
+    console.error("no webcam");
+  }
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{"./classes/LinkShare.js":"/Users/matt/code/webvr-camera-viewer/src/classes/LinkShare.js","./classes/VideoControlPanel.js":"/Users/matt/code/webvr-camera-viewer/src/classes/VideoControlPanel.js","freeice":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/index.js","rtc-quickconnect":"/Users/matt/code/webvr-camera-viewer/node_modules/rtc-quickconnect/index.js"}],"/Users/matt/code/webvr-camera-viewer/src/templates/main.tpl.html":[function(require,module,exports){
 module.exports = "<h1>WebVR Camera Stream</h1><a href=# id=stream>stream</a>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/templates/stream.tpl.html":[function(require,module,exports){
 module.exports = "<h1>Room: <span id=roomId></span> <span class=subtitle>USERS CONNECTED: <span id=user-count></span></span></h1><div id=stream-box class=link-share><h2>Stream Link</h2></div><div id=view-box class=link-share><h2>View Link</h2></div>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/templates/view.tpl.html":[function(require,module,exports){
-module.exports = "<style>#viewer {\n  background-color: #000;\n  color: #fff;\n  margin: 0px;\n  padding: 0;\n  overflow: hidden;\n}</style><div id=viewer></div>";
+module.exports = "<style>body {\n  padding: 0;\n  margin: 0;\n}\n#viewer {\n  background-color: #000;\n  color: #fff;\n  margin: 0px;\n  padding: 0;\n  overflow: hidden;\n}</style><div id=viewer></div>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/viewer.js":[function(require,module,exports){
 (function (global){
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 var $ = typeof window !== "undefined" ? window.$ : typeof global !== "undefined" ? global.$ : null;
 var quickconnect = require("rtc-quickconnect");
+var freeice = require("freeice");
+var TWEEN = require("tween.js");
+
+var Screen = require("./classes/Screen.js");
 
 module.exports = function view(ctx) {
   var THREE = typeof window !== "undefined" ? window.THREE : typeof global !== "undefined" ? global.THREE : null;
   var WebVRManager = typeof window !== "undefined" ? window.WebVRManager : typeof global !== "undefined" ? global.WebVRManager : null;
 
-  var Screen = (function () {
-    function Screen(stream, id) {
-      _classCallCheck(this, Screen);
-
-      this.id = id; // stream ID
-      this.stream = stream;
-
-      this.width = 1280;
-      this.height = 768;
-
-      this.video = document.createElement("video");
-      this.video.width = this.width;
-      this.video.height = this.height;
-      this.video.autoplay = true;
-
-      this.video.src = window.URL.createObjectURL(stream);
-
-      this.geometry = new THREE.PlaneBufferGeometry(this.width, this.height);
-
-      // translate geometry away from the origin to allow rotation
-      this.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, -1800));
-
-      this.videoTexture = new THREE.Texture(this.video);
-      this.videoTexture.minFilter = THREE.NearestFilter;
-
-      this.material = new THREE.MeshBasicMaterial({
-        map: this.videoTexture,
-        side: THREE.DoubleSide
-      });
-
-      this.mesh = new THREE.Mesh(this.geometry, this.material);
-      this.rotation = 0;
-    }
-
-    _createClass(Screen, [{
-      key: "update",
-      value: function update() {
-        if (this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
-          this.videoTexture.needsUpdate = true;
-        }
-
-        if (this.mesh.rotation.y < this.rotation) {
-          this.mesh.rotation.y += Math.PI / 128;
-        }
-      }
-    }]);
-
-    return Screen;
-  })();
-
   var room = ctx.params.id;
-  console.log(room);
 
   // const width = 640
   // const height = 480
   var width = window.innerWidth;
   var height = window.innerHeight;
+
+  /**
+   * create RTC connection
+   */
+  // Array to Maintain connected screens
+  var screens = [];
+
+  var rtcStream = quickconnect("https://switchboard.rtc.io/", {
+    room: room,
+    iceServers: freeice()
+  }).on("call:started", function (id, pc, data) {
+    console.log("call started with", id, data);
+  }).on("call:ended", function (id) {
+    console.log("call ended with", id);
+  });
 
   /**
    * Begin VR scene
@@ -7311,8 +8360,24 @@ module.exports = function view(ctx) {
   // configure camera
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.3, 10000);
+  camera.position.y = 1.8; // set height in meters
 
-  var controls = new THREE.VRControls(camera);
+  // create floor texture
+  var floorTexture = THREE.ImageUtils.loadTexture("assets/grid.png");
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+  floorTexture.repeat.set(100, 100);
+  var floorMaterial = new THREE.MeshBasicMaterial({
+    map: floorTexture,
+    side: THREE.DoubleSide
+  });
+  var floorGeometry = new THREE.PlaneBufferGeometry(100, 100, 1, 1);
+  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = Math.PI / 2;
+  scene.add(floor);
+
+  var controls = new THREE.VRControls(camera, function (err) {
+    console.log(err);
+  });
 
   // create renderer
   var renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -7327,46 +8392,38 @@ module.exports = function view(ctx) {
   // create WebVR manager
   var manager = new WebVRManager(renderer, effect, { hideButton: false });
 
-  // Array to Maintain connected screens
-  var screens = [];
-
-  var blah = 0;
-
-  var rtcStream = quickconnect("https://switchboard.rtc.io/", { room: room }).on("call:started", function (id, pc, data) {
-    console.log("call started with", id, data);
-  }).on("call:ended", function (id) {
-    console.log("call ended with", id);
-  }).on("stream:added", function (id, stream, data) {
-
-    console.log("stream added from", id, stream);
-
-    // only create a new screen for streaming connecctions
+  rtcStream.on("stream:added", function (clientId, stream, data) {
+    console.log("stream added from", clientId, stream);
+    // only create a new screen for streaming connections
     if (stream.label !== "default") {
       var _screen = new Screen(stream);
-      _screen.rotation = blah * Math.PI / 4;
-      scene.add(_screen.mesh);
       screens.push(_screen);
-      blah++;
+      _screen.add(scene);
+
+      resetScreens(screens);
     }
-  }).on("stream:removed", function (id) {
+  }).on("stream:removed", function (clientId, stream) {
     for (var i = 0; i < screens.length; i++) {
-      if (screens[i].id === id) {
-        scene.remove(screens[i].mesh);
+      if (screens[i].id === stream.id) {
         screens.splice(i, 1);
         break;
       }
     }
+
+    resetScreens(screens);
   });
 
-  function animate() {
+  function animate(time) {
     for (var i = 0; i < screens.length; i++) {
       screens[i].update();
     }
 
     controls.update();
+    TWEEN.update(time);
 
     // renderer.render(scene, camera)
     manager.render(scene, camera);
+
     window.requestAnimationFrame(animate);
   }
 
@@ -7374,10 +8431,12 @@ module.exports = function view(ctx) {
 
   // Reset the position sensor when 'z' pressed.
   function onKey(event) {
-    if (event.keyCode === 90) {
-      // z
-      console.log("reseting sensor");
-      controls.resetSensor();
+    switch (event.keyCode) {
+      case 90:
+        // z
+        console.log("reseting sensor");
+        controls.resetSensor();
+        break;
     }
   }
   window.addEventListener("keydown", onKey, true);
@@ -7390,9 +8449,16 @@ module.exports = function view(ctx) {
   window.addEventListener("resize", onWindowResize, false);
 };
 
+// Layout screen rotations
+function resetScreens(screens) {
+  screens.forEach(function (screen, i) {
+    screens[i].rotate(i * Math.PI / 3);
+  });
+}
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"rtc-quickconnect":"/Users/matt/code/webvr-camera-viewer/node_modules/rtc-quickconnect/index.js"}]},{},["/Users/matt/code/webvr-camera-viewer/src/app.js"])
+},{"./classes/Screen.js":"/Users/matt/code/webvr-camera-viewer/src/classes/Screen.js","freeice":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/index.js","rtc-quickconnect":"/Users/matt/code/webvr-camera-viewer/node_modules/rtc-quickconnect/index.js","tween.js":"/Users/matt/code/webvr-camera-viewer/node_modules/tween.js/index.js"}]},{},["/Users/matt/code/webvr-camera-viewer/src/app.js"])
 
 
 //# sourceMappingURL=app.js.map

@@ -8308,7 +8308,7 @@ exports.join = function stream(ctx) {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./classes/LinkShare.js":"/Users/matt/code/webvr-camera-viewer/src/classes/LinkShare.js","./classes/VideoControlPanel.js":"/Users/matt/code/webvr-camera-viewer/src/classes/VideoControlPanel.js","freeice":"/Users/matt/code/webvr-camera-viewer/node_modules/freeice/index.js","rtc-quickconnect":"/Users/matt/code/webvr-camera-viewer/node_modules/rtc-quickconnect/index.js"}],"/Users/matt/code/webvr-camera-viewer/src/templates/main.tpl.html":[function(require,module,exports){
-module.exports = "<h1>WebVR Camera Stream</h1><a href=# id=stream>stream</a>";
+module.exports = "<h1>WebVR Camera Stream</h1><div>Read about the project <a href=\"https://greenin.space/streaming-video-in-webvr/\">here</a></div><div><a href=# id=stream>Start a new stream</a></div>";
 
 },{}],"/Users/matt/code/webvr-camera-viewer/src/templates/stream.tpl.html":[function(require,module,exports){
 module.exports = "<h1>Room: <span id=roomId></span> <span class=subtitle>USERS CONNECTED: <span id=user-count></span></span></h1><div id=stream-box class=link-share><h2>Stream Link</h2></div><div id=view-box class=link-share><h2>View Link</h2></div>";
